@@ -1,7 +1,7 @@
 package de.techdev.example
 
 import com.google.gson.Gson
-import spark.Spark.get
+import spark.Spark.*
 import java.sql.ResultSet
 
 data class Person(val id: Long, val firstName: String, val lastName: String)
@@ -12,8 +12,9 @@ fun main(args: Array<String>) {
 
     val personMapper = { rs: ResultSet -> Person(rs.getLong("id"), rs.getString("first_name"), rs.getString("last_name")) }
 
+    staticFiles.location("/static")
+    redirect.get("/", "/index.html")
     val gson = Gson()
-    get("/", { _, _ -> "hello" })
     get("/person", { req, _ ->
         if(req.queryParams("last_name") != null) {
             jdbc.queryForList("SELECT * FROM person WHERE last_name = ?", personMapper, req.queryParams("last_name"))
