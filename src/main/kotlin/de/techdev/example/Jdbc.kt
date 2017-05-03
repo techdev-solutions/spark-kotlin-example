@@ -21,16 +21,30 @@ class Jdbc {
     /**
      * Executes a query like an INSERT or UPDATE
      */
-    fun execute(sql: String) {
+    fun execute(sql: String, vararg args: Any?) {
         callInternal(sql, {
             it.execute()
-        })
+        }, *args)
+    }
+
+    /**
+     * Queries for a single object. Throws an IllegalStateException if no row is found for the query.
+     */
+    fun <T> query(sql: String, mapper: (rs: ResultSet) -> T, vararg args: Any?): T {
+        return callInternal(sql, {
+            val rs = it.executeQuery()
+            if (rs.next()) {
+                mapper.invoke(rs)
+            } else {
+                throw IllegalStateException("No result found for query.")
+            }
+        }, *args)
     }
 
     /**
      * Queries the database for a list of objects.
      */
-    fun <T> queryForList(sql: String, rowMapper: (rs: ResultSet) -> T): List<T> {
+    fun <T> queryForList(sql: String, rowMapper: (rs: ResultSet) -> T, vararg args: Any?): List<T> {
         return callInternal(sql, {
             val result = ArrayList<T>()
             val rs = it.executeQuery()
@@ -38,22 +52,34 @@ class Jdbc {
                 result.add(rowMapper.invoke(rs))
             }
             result
-        })
+        }, *args)
     }
 
     /**
      * Creates and cleans up a prepared statement with a user provided action on the statement.
      */
-    private fun <T> callInternal(sql: String, action: (pstmt: PreparedStatement) -> T): T {
+    private fun <T> callInternal(sql: String, action: (pstmt: PreparedStatement) -> T, vararg args: Any?): T {
         var conn: Connection? = null
         var pstmt: PreparedStatement? = null
         try {
             conn = dataSource.connection
             pstmt = conn.prepareStatement(sql)
+            pstmt.setParameters(*args)
             return action.invoke(pstmt)
         } finally {
             conn?.close()
             pstmt?.close()
+        }
+    }
+}
+
+fun PreparedStatement.setParameters(vararg args: Any?) {
+    for (i in args.indices) {
+        val arg = args[i]
+        val statementIndex = i + 1
+        when(arg) {
+            is String -> this.setString(statementIndex, arg)
+            is Long -> this.setLong(statementIndex, arg)
         }
     }
 }
