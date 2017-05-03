@@ -5,12 +5,22 @@ function loadPeople() {
         });
 }
 
+function createPerson(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    $ajax.post('/person', {firstName: event.target.first_name.value, lastName: event.target.last_name.value});
+}
+
 let $ajax = {
     get(url) {
         return this.call('GET', url);
     },
 
-    call(method, url) {
+    post(url, data) {
+        return this.call('POST', url, data)
+    },
+
+    call(method, url, data) {
         return new Promise((resolve, reject) => {
             let xhr = new XMLHttpRequest();
             xhr.open(method, url);
@@ -22,7 +32,11 @@ let $ajax = {
                 }
             };
             xhr.onerror = () => reject(new Error("Network error"));
-            xhr.send();
+            if(data) {
+                xhr.send(JSON.stringify(data));
+            } else {
+                xhr.send()
+            }
         });
     }
 };

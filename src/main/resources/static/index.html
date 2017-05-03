@@ -8,6 +8,14 @@
 <h1>People</h1>
 <button type="button" onclick="loadPeople()">Load</button>
 <div id="result"></div>
+
+<form onsubmit="createPerson(event)">
+    <label for="first_name">First name</label>
+    <input id="first_name" type="text" name="first_name" required="required">
+    <label for="last_name">Last name</label>
+    <input id="last_name" type="text" name="last_name" required="required">
+    <button type="submit">Submit</button>
+</form>
 </body>
 <script type="text/javascript" src="index.js"></script>
 </html>

@@ -22,6 +22,11 @@ fun main(args: Array<String>) {
             jdbc.queryForList("SELECT * FROM person", personMapper)
         }
     }, gson::toJson)
+    post("/person", { req, _ ->
+        val person = gson.fromJson(req.body(), Person::class.java)
+        jdbc.execute("INSERT INTO person (first_name, last_name) VALUES (?, ?)", person.firstName, person.lastName)
+        halt(201)
+    })
     get("/person/:id", { req, _ ->
         jdbc.query("SELECT * FROM person WHERE id = ?", personMapper, req.params("id").toLong())
     }, gson::toJson)
